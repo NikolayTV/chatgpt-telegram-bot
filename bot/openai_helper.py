@@ -258,6 +258,8 @@ class OpenAIHelper:
                 if len(functions) > 0:
                     common_args['functions'] = self.plugin_manager.get_functions_specs()
                     common_args['function_call'] = 'auto'
+                    
+            # OPENAI CALLING CHAT INFERENCE PREDICT
             return await self.client.chat.completions.create(**common_args)
 
         except openai.RateLimitError as e:
