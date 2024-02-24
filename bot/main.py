@@ -4,7 +4,8 @@ import os
 from dotenv import load_dotenv
 
 from plugin_manager import PluginManager
-from openai_helper import OpenAIHelper, default_max_tokens, are_functions_available
+from openai_helper import default_max_tokens, are_functions_available
+from openai_assistant_helper import OpenAIAssistantHelper
 from telegram_bot import ChatGPTTelegramBot
 
 
@@ -20,7 +21,7 @@ def main():
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     # Check if the required environment variables are set
-    required_values = ['TELEGRAM_BOT_TOKEN', 'OPENAI_API_KEY']
+    required_values = ['TELEGRAM_BOT_TOKEN', 'OPENAI_API_KEY', 'ASSISTANT_ID']
     missing_values = [value for value in required_values if os.environ.get(value) is None]
     if len(missing_values) > 0:
         logging.error(f'The following environment values are missing in your .env: {", ".join(missing_values)}')
@@ -32,6 +33,7 @@ def main():
     max_tokens_default = default_max_tokens(model=model)
     openai_config = {
         'api_key': os.environ['OPENAI_API_KEY'],
+        'assistant_id': os.environ['ASSISTANT_ID'],
         'show_usage': os.environ.get('SHOW_USAGE', 'false').lower() == 'true',
         'stream': os.environ.get('STREAM', 'true').lower() == 'true',
         'proxy': os.environ.get('PROXY', None) or os.environ.get('OPENAI_PROXY', None),
@@ -108,7 +110,8 @@ def main():
 
     # Setup and run ChatGPT and Telegram bot
     plugin_manager = PluginManager(config=plugin_config)
-    openai_helper = OpenAIHelper(config=openai_config, plugin_manager=plugin_manager)
+    # openai_helper = OpenAIHelper(config=openai_config, plugin_manager=plugin_manager)
+    openai_helper = OpenAIAssistantHelper(config=openai_config, plugin_manager=plugin_manager)
     telegram_bot = ChatGPTTelegramBot(config=telegram_config, openai=openai_helper)
     telegram_bot.run()
 
