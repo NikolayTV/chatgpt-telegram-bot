@@ -42,16 +42,17 @@ class ChatGPTTelegramBot:
         bot_language = self.config['bot_language']
         self.commands = [
             BotCommand(command='help', description=localized_text('help_description', bot_language)),
-            BotCommand(command='reset', description=localized_text('reset_description', bot_language)),
-            BotCommand(command='stats', description=localized_text('stats_description', bot_language)),
-            BotCommand(command='resend', description=localized_text('resend_description', bot_language))
+            # BotCommand(command='reset', description=localized_text('reset_description', bot_language)),
+            # BotCommand(command='stats', description=localized_text('stats_description', bot_language)),
+            # BotCommand(command='resend', description=localized_text('resend_description', bot_language))
         ]
         # If imaging is enabled, add the "image" command to the list
-        if self.config.get('enable_image_generation', False):
-            self.commands.append(BotCommand(command='image', description=localized_text('image_description', bot_language)))
+        if False:
+            if self.config.get('enable_image_generation', False):
+                self.commands.append(BotCommand(command='image', description=localized_text('image_description', bot_language)))
 
-        if self.config.get('enable_tts_generation', False):
-            self.commands.append(BotCommand(command='tts', description=localized_text('tts_description', bot_language)))
+            if self.config.get('enable_tts_generation', False):
+                self.commands.append(BotCommand(command='tts', description=localized_text('tts_description', bot_language)))
 
         self.group_commands = [BotCommand(
             command='chat', description=localized_text('chat_description', bot_language)

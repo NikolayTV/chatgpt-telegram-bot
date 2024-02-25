@@ -26,8 +26,7 @@ from openai_helper import OpenAIHelper
 class OpenAIAssistantHelper(OpenAIHelper):
     def __init__(self, config, plugin_manager):
         super().__init__(config, plugin_manager)
-        http_client = httpx.AsyncClient(proxies=config['proxy']) if 'proxy' in config else None
-        self.client = openai.AsyncOpenAI(api_key=config['api_key'])
+        self.client_assistant = openai.AsyncOpenAI(api_key=config['api_key'])
         self.assistant_id = config['assistant_id']
         self.threads = {} 
 
@@ -37,28 +36,33 @@ class OpenAIAssistantHelper(OpenAIHelper):
 
         # IF FIRST MESSAGE IN CHAT
         if chat_id not in self.threads:
-            thread = await self.client.beta.threads.create(
+            thread = await self.client_assistant.beta.threads.create(
                 messages=[{"role": "user","content": query, # "file_ids": [file.id] 
             }])
             self.threads[chat_id] = thread
 
         else:
             thread = self.threads[chat_id]
-            await self.client.beta.threads.messages.create(
+            await self.client_assistant.beta.threads.messages.create(
                 thread_id=thread.id, role="user", content=query
             )
 
-        run = await self.client.beta.threads.runs.create(thread_id=thread.id, assistant_id=self.assistant_id)
         # Wait for the run to complete
-        while True:
-            run = await self.client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
-            if run.status == 'completed': break
+        sleeping_time = 0.1
+        max_wait_time = 20
+        assistant_response = 'Что-то сломалось у меня... Пожалуйста попробуйте позже'
+        counter = 0
+        run = await self.client_assistant.beta.threads.runs.create(thread_id=thread.id, assistant_id=self.assistant_id)
+        while run.status in ['queued', 'in_progress'] and counter < int(max_wait_time//sleeping_time):
+            run = await self.client_assistant.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+            # if run.status == 'completed': 
+            messages = await self.client_assistant.beta.threads.messages.list(thread_id=thread.id)
+            assistant_response = messages.data[0].content[0].text.value
             await asyncio.sleep(0.1)  # Sleep for a short period before checking again
 
-        messages = await self.client.beta.threads.messages.list(thread_id=thread.id)
-        assistant_response = messages.data[0].content[0].text.value
         print('assistant_response', assistant_response)
-        return assistant_response, 10
+        return assistant_response, 10                
+
 
 # class OpenAIHelper:
 #     """

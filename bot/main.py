@@ -4,14 +4,14 @@ import os
 from dotenv import load_dotenv
 
 from plugin_manager import PluginManager
-from openai_helper import default_max_tokens, are_functions_available
+from openai_helper import default_max_tokens, are_functions_available, OpenAIHelper
 from openai_assistant_helper import OpenAIAssistantHelper
 from telegram_bot import ChatGPTTelegramBot
 
 
 def main():
     # Read .env file
-    load_dotenv()
+    load_dotenv(dotenv_path='/Users/nikolaytv/workspace/curator_ai/chatgpt-telegram-bot/.env') #
 
     # Setup logging
     logging.basicConfig(
@@ -74,7 +74,6 @@ def main():
     if os.environ.get('MONTHLY_GUEST_BUDGET') is not None:
         logging.warning('The environment variable MONTHLY_GUEST_BUDGET is deprecated. '
                         'Please use GUEST_BUDGET with BUDGET_PERIOD instead.')
-
     telegram_config = {
         'token': os.environ['TELEGRAM_BOT_TOKEN'],
         'admin_user_ids': os.environ.get('ADMIN_USER_IDS', '-'),
@@ -103,6 +102,12 @@ def main():
         'transcription_price': float(os.environ.get('TRANSCRIPTION_PRICE', 0.006)),
         'bot_language': os.environ.get('BOT_LANGUAGE', 'en'),
     }
+
+
+    print('assistant_id', openai_config['assistant_id'])
+    print('enable_image_generation', os.environ.get('enable_image_generation'))
+    print('enable_image_generation', telegram_config['enable_image_generation'])
+
 
     plugin_config = {
         'plugins': os.environ.get('PLUGINS', '').split(',')
