@@ -22,6 +22,15 @@ from utils import is_direct_result, encode_image, decode_image
 from plugin_manager import PluginManager
 
 from openai_helper import OpenAIHelper
+import logging
+
+# Configure logging
+logging.basicConfig(filename='logfile.log', level=logging.INFO, 
+                    format='%(asctime)s:%(levelname)s:%(message)s')
+
+
+
+
 
 class OpenAIAssistantHelper(OpenAIHelper):
     def __init__(self, config, plugin_manager):
@@ -33,6 +42,7 @@ class OpenAIAssistantHelper(OpenAIHelper):
 
     async def get_chat_response(self, chat_id: int, query: str) -> str:
         """Override the method to use the new assistant API for getting chat responses."""
+        print({"chaid_id": chat_id, "query": query, })
 
         # IF FIRST MESSAGE IN CHAT
         if chat_id not in self.threads:
@@ -55,12 +65,14 @@ class OpenAIAssistantHelper(OpenAIHelper):
         run = await self.client_assistant.beta.threads.runs.create(thread_id=thread.id, assistant_id=self.assistant_id)
         while run.status in ['queued', 'in_progress'] and counter < int(max_wait_time//sleeping_time):
             run = await self.client_assistant.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
-            # if run.status == 'completed': 
-            messages = await self.client_assistant.beta.threads.messages.list(thread_id=thread.id)
-            assistant_response = messages.data[0].content[0].text.value
-            await asyncio.sleep(0.1)  # Sleep for a short period before checking again
+            if run.status == 'completed': 
+                messages = await self.client_assistant.beta.threads.messages.list(thread_id=thread.id)
 
-        print('assistant_response', assistant_response)
+                assistant_response = messages.data[0].content[0].text.value
+                await asyncio.sleep(0.1)  # Sleep for a short period before checking again
+
+        print({"chaid_id": chat_id, "query": query, "assistant_response": assistant_response})
+        logging.info({"chat_id": chat_id, "query": query, "assistant_response": assistant_response})
         return assistant_response, 10                
 
 
